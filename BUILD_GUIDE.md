@@ -3,6 +3,7 @@
 ## 📋 Status Implementasi
 
 ✅ **COMPLETED (100%)**
+
 - platformio.ini - All dependencies configured
 - 8 Header files - Complete API definitions
 - 11 Implementation files - Full code coverage
@@ -12,6 +13,7 @@
 ## 🔧 Build & Upload Instructions
 
 ### Prerequisites
+
 1. **VS Code** dengan extensions:
    - PlatformIO IDE (ms-vscode.platformio-ide)
    - C/C++ (ms-vscode.cpptools)
@@ -26,6 +28,7 @@
    - Power supply
 
 ### Step 1: Open Project
+
 ```bash
 # Buka folder project di VS Code
 cd d:\PlatformIO\Projects\RTOS
@@ -33,11 +36,14 @@ code .
 ```
 
 ### Step 2: Build Project
+
 Klik **PlatformIO: Build** dari command palette (`Ctrl+Shift+P`):
+
 - atau klik icon PlatformIO di sidebar → Build
 - atau gunakan `pio run` di terminal
 
 **Expected Output:**
+
 ```
 Checking size of built files...
 |-- RAM:   [====     ]  45.2% (used 148324 bytes from 328192 bytes)
@@ -45,18 +51,22 @@ Checking size of built files...
 ```
 
 ### Step 3: Upload ke ESP32
+
 1. **Connect ESP32** via USB
 2. Klik **PlatformIO: Upload** atau tombol Upload di PlatformIO
 3. Monitor output di terminal
 
 **Expected Output:**
+
 ```
 Connecting....._____....._____....._____....._____....._____....._____....._____
 Hard resetting via RTS pin...
 ```
 
 ### Step 4: Verify Running
+
 Klik **PlatformIO: Monitor** untuk Serial Monitor:
+
 ```
 [BOOT] Initializing RFID Attendance System...
 [BOOT] GPIO configured
@@ -80,7 +90,9 @@ Klik **PlatformIO: Monitor** untuk Serial Monitor:
 ## 📡 Configuration Guide
 
 ### WiFi & MQTT Setup
+
 Edit `include/config.h`:
+
 ```c
 #define WIFI_SSID "YOUR_SSID"
 #define WIFI_PASSWORD "YOUR_PASSWORD"
@@ -89,7 +101,9 @@ Edit `include/config.h`:
 ```
 
 ### GPIO Pins
+
 Sesuaikan dengan hardware:
+
 ```c
 #define BUZZER_PIN 14
 #define GREEN_LED 26
@@ -100,6 +114,7 @@ Sesuaikan dengan hardware:
 ```
 
 ### Task Priorities & Periods
+
 ```c
 #define INPUT_TASK_PERIOD 50      // 50ms - fastest, highest priority
 #define AUTH_TASK_PERIOD 100      // 100ms - core authentication
@@ -109,6 +124,7 @@ Sesuaikan dengan hardware:
 ```
 
 ### Security Settings
+
 ```c
 #define MAX_FAILED_ATTEMPTS 3        // Lock after 3 failed attempts
 #define LOCKOUT_DURATION_MS 30000    // 30 second lockout
@@ -120,15 +136,19 @@ Sesuaikan dengan hardware:
 ## 🌐 Web Dashboard Access
 
 ### 1. Get ESP32 IP Address
+
 Lihat di Serial Monitor setelah boot:
+
 ```
 [WiFi] Connected! IP: 192.168.1.100
 ```
 
 ### 2. Open Dashboard
+
 Buka browser → `http://192.168.1.100:8080/admin`
 
 ### 3. Register New Card
+
 1. Scan/tap RFID card untuk mendapat UID
 2. Masukkan UID (8 hex chars) di form
 3. Masukkan User Name
@@ -136,6 +156,7 @@ Buka browser → `http://192.168.1.100:8080/admin`
 5. Lihat di tabel "Registered Cards"
 
 ### 4. Delete Card
+
 Klik tombol "Delete" di samping card
 
 ---
@@ -144,13 +165,14 @@ Klik tombol "Delete" di samping card
 
 Sistem publish ke MQTT broker untuk monitoring:
 
-| Topic | Payload | Frequency |
-|-------|---------|-----------|
-| `attendance/rfid/uid_update` | `{old_uid, new_uid, user_id, timestamp}` | Per tap (valid) |
-| `attendance/rfid/event_log` | `{type, uid, user_name, result, message}` | Per tap |
-| `attendance/rfid/database_pull` | Request sync | Setiap 5 detik |
+| Topic                           | Payload                                   | Frequency       |
+| ------------------------------- | ----------------------------------------- | --------------- |
+| `attendance/rfid/uid_update`    | `{old_uid, new_uid, user_id, timestamp}`  | Per tap (valid) |
+| `attendance/rfid/event_log`     | `{type, uid, user_name, result, message}` | Per tap         |
+| `attendance/rfid/database_pull` | Request sync                              | Setiap 5 detik  |
 
 ### Subscribe dengan MQTT Client
+
 ```bash
 # Gunakan mosquitto_sub (jika installed)
 mosquitto_sub -h test.mosquitto.org -t "attendance/rfid/#"
@@ -161,11 +183,13 @@ mosquitto_sub -h test.mosquitto.org -t "attendance/rfid/#"
 ## 🔐 Security Features
 
 ### Rolling Token Anti-Spoofing
+
 - Setiap tap valid → UID berubah secara otomatis
 - UID lama tidak bisa digunakan lagi
 - Hanya 1 UID valid per card di database
 
 ### Failed Attempt Lockout
+
 - 1st failed attempt → RED LED + error beep
 - 2nd failed attempt → RED LED + error beep
 - 3rd failed attempt → System LOCKED
@@ -174,10 +198,11 @@ mosquitto_sub -h test.mosquitto.org -t "attendance/rfid/#"
   - Automatic unlock setelah timeout
 
 ### Hardware Feedback
-| Event | LED | Buzzer |
-|-------|-----|--------|
-| Access Granted | 🟢 Green 50ms | Beep 100ms |
-| Access Denied | 🔴 Red 200ms | Double beep |
+
+| Event          | LED             | Buzzer          |
+| -------------- | --------------- | --------------- |
+| Access Granted | 🟢 Green 50ms   | Beep 100ms      |
+| Access Denied  | 🔴 Red 200ms    | Double beep     |
 | System Lockout | 🔴 Red pulse 3x | Long beep 500ms |
 
 ---
@@ -185,6 +210,7 @@ mosquitto_sub -h test.mosquitto.org -t "attendance/rfid/#"
 ## 🧪 Testing Checklist
 
 ### ✅ Phase 1: Boot & Connectivity
+
 - [ ] Serial Monitor shows boot messages
 - [ ] WiFi connects successfully
 - [ ] MQTT connects to broker
@@ -192,6 +218,7 @@ mosquitto_sub -h test.mosquitto.org -t "attendance/rfid/#"
 - [ ] LCD displays "Ready to scan"
 
 ### ✅ Phase 2: Card Registration
+
 - [ ] Scan RFID card (or simulate with dummy UID)
 - [ ] See UID in Serial Monitor
 - [ ] Open web dashboard
@@ -199,6 +226,7 @@ mosquitto_sub -h test.mosquitto.org -t "attendance/rfid/#"
 - [ ] Card appears in "Registered Cards" table
 
 ### ✅ Phase 3: Access Control
+
 - [ ] Tap registered card → GREEN LED + beep + "ACCESS GRANTED" on LCD
 - [ ] UID in database changes (rolling token)
 - [ ] Tap unregistered card → RED LED + beep + "ACCESS DENIED"
@@ -207,12 +235,15 @@ mosquitto_sub -h test.mosquitto.org -t "attendance/rfid/#"
 - [ ] After timeout → System unlocked automatically
 
 ### ✅ Phase 4: MQTT & Cloud
+
 - [ ] Subscribe to `attendance/rfid/#`
 - [ ] Verify events publish on each tap
 - [ ] Check MQTT JSON payload format
 
 ### ✅ Phase 5: Performance
+
 Monitor di Serial output:
+
 ```
 [STATS] Input Task - Stack: 1200/2048 CPU: 2.3%
 [STATS] Auth Task - Stack: 2100/3072 CPU: 1.8%
@@ -224,22 +255,27 @@ Monitor di Serial output:
 ## 🐛 Troubleshooting
 
 ### "ERROR: Failed to create FreeRTOS objects"
+
 - **Penyebab**: Heap tidak cukup
 - **Solusi**: Kurangi stack size di config.h atau hapus fitur yang tidak perlu
 
 ### WiFi tidak connect
+
 - **Penyebab**: SSID/password salah atau WiFi tidak available
 - **Solusi**: Edit WIFI_SSID & WIFI_PASSWORD di config.h, re-flash
 
 ### MQTT tidak connect
+
 - **Penyebab**: Broker down atau network blocked
 - **Solusi**: Test dengan `mosquitto_sub -h test.mosquitto.org`, ganti broker jika perlu
 
 ### RFID tidak terbaca
+
 - **Penyebab**: Hardware issue atau wiring salah
 - **Solusi**: Check GPIO pins di config.h, verify I2C address (0x27 untuk LCD)
 
 ### LCD 16x2 tidak muncul
+
 - **Penyebab**: I2C address salah atau tidak terpasang
 - **Solusi**: Scan I2C addresses: `pio device monitor` + custom script
 
@@ -277,6 +313,7 @@ RTOS/
 ## 📝 API Reference
 
 ### Queues (Inter-task Communication)
+
 ```c
 xQueueSend(rfidDataQueue, &rfidData, timeout);           // Input → Auth
 xQueueSend(rollingTokenQueue, &update, timeout);         // Auth → Comm
@@ -285,6 +322,7 @@ xQueueSend(httpRequestQueue, &httpReq, timeout);         // WebServer → WebSer
 ```
 
 ### Synchronization
+
 ```c
 xSemaphoreTake(databaseMutex, timeout);                  // Protect DB access
 xSemaphoreGive(databaseMutex);
@@ -294,6 +332,7 @@ xSemaphoreGive(serialMutex);
 ```
 
 ### Key Functions
+
 ```c
 // security.cpp
 calculateRollingToken(old_uid, new_uid)      // Generate next UID
@@ -330,19 +369,24 @@ publishEventLog(event)                       // Send event
 ## 📞 Support & Debugging
 
 ### Enable Verbose Logging
+
 Di `config.h`, uncomment:
+
 ```c
 #define DEBUG_VERBOSE 1
 ```
 
 ### Monitor Tasks
+
 Serial Monitor akan show:
+
 ```
 [STATS] Task: Input   | Stack: 1200/2048 | CPU: 2.3%
 [STATS] Task: Auth    | Stack: 2100/3072 | CPU: 1.8%
 ```
 
 ### Check Heap Usage
+
 ```c
 Serial.printf("Free Heap: %u bytes\n", esp_get_free_heap_size());
 ```
@@ -352,4 +396,3 @@ Serial.printf("Free Heap: %u bytes\n", esp_get_free_heap_size());
 **Created**: May 30, 2026
 **System**: FreeRTOS 11.3.0 LTS + ESP32
 **Framework**: Arduino with PlatformIO
-

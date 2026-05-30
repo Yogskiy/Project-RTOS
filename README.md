@@ -11,6 +11,7 @@
 Sistem ini mengimplementasikan akses kontrol berbasis RFID dengan mekanisme keamanan tingkat enterprise:
 
 ### Fitur Utama
+
 ✅ **Rolling Token Anti-Spoofing** - UID berubah setelah setiap tap (tidak bisa di-replay)  
 ✅ **3-Layer Data Persistence** - RAM (performa) + SPIFFS (reliability) + MQTT Cloud (sync)  
 ✅ **Web Dashboard** - Admin panel HTML/JavaScript untuk registrasi UID on-the-fly  
@@ -18,7 +19,7 @@ Sistem ini mengimplementasikan akses kontrol berbasis RFID dengan mekanisme keam
 ✅ **Failed Attempt Lockout** - 3 failed attempts → lock 30 seconds  
 ✅ **Hardware Feedback** - LED (green/red) + buzzer patterns  
 ✅ **Dual Display** - LCD 16x2 I2C + Serial Monitor output  
-✅ **Multi-Task FreeRTOS** - 6 concurrent tasks dengan priority scheduling  
+✅ **Multi-Task FreeRTOS** - 6 concurrent tasks dengan priority scheduling
 
 ---
 
@@ -189,6 +190,7 @@ new_uid[3] = (uint8_t)(new_suffix & 0xFF)
 ```
 
 **Anti-Spoofing Guarantee**:
+
 - Attacker taps old UID (0x78) → **DENIED** (not in database)
 - Each card has unique rolling sequence (0x000 → 0xFFF → 0x000)
 - Only 1 valid UID per card at any time
@@ -199,15 +201,15 @@ new_uid[3] = (uint8_t)(new_suffix & 0xFF)
 ```
 Attempt 1: RED LED (200ms) + Double Beep
            ✓ Failed counter: 1/3
-           
+
 Attempt 2: RED LED (200ms) + Double Beep
            ✓ Failed counter: 2/3
-           
+
 Attempt 3: RED LED Pulse 3x + Long Beep (500ms)
            ✗ SYSTEM LOCKED!
            ✗ Failed counter: 3/3
            ✗ Lockout duration: 30 seconds
-           
+
 [Time: 0-30s] ← All access DENIED (including valid UIDs)
 [Time: 30s]   ← Auto-unlock, reset counter to 0/3
 
@@ -274,22 +276,22 @@ SecurityState {
 
 ## 🔗 Inter-Task Communication
 
-| Queue | Producer | Consumer | Payload | Size |
-|-------|----------|----------|---------|------|
-| `rfidDataQueue` | Input Task | Auth Task | RFIDData | 8 items |
-| `rollingTokenQueue` | Auth Task | Comm Task | RollingTokenUpdate | 4 items |
-| `eventLogQueue` | Auth/Security | Comm/Display | EventLog | 8 items |
-| `httpRequestQueue` | Web Server | WebServer Task | HTTPRequest | 4 items |
+| Queue               | Producer      | Consumer       | Payload            | Size    |
+| ------------------- | ------------- | -------------- | ------------------ | ------- |
+| `rfidDataQueue`     | Input Task    | Auth Task      | RFIDData           | 8 items |
+| `rollingTokenQueue` | Auth Task     | Comm Task      | RollingTokenUpdate | 4 items |
+| `eventLogQueue`     | Auth/Security | Comm/Display   | EventLog           | 8 items |
+| `httpRequestQueue`  | Web Server    | WebServer Task | HTTPRequest        | 4 items |
 
-| Semaphore | Type | Purpose |
-|-----------|------|---------|
-| `rfidReadSemaphore` | Binary | ISR → Input Task (new card scanned) |
-| `wifiConnectedSemaphore` | Binary | WiFi connected signal |
+| Semaphore                | Type   | Purpose                             |
+| ------------------------ | ------ | ----------------------------------- |
+| `rfidReadSemaphore`      | Binary | ISR → Input Task (new card scanned) |
+| `wifiConnectedSemaphore` | Binary | WiFi connected signal               |
 
-| Mutex | Purpose |
-|------|---------|
+| Mutex           | Purpose                                    |
+| --------------- | ------------------------------------------ |
 | `databaseMutex` | Protect UIDDatabase access (SPIFFS writes) |
-| `serialMutex` | Protect Serial.print (prevent interleave) |
+| `serialMutex`   | Protect Serial.print (prevent interleave)  |
 
 ---
 
@@ -324,8 +326,8 @@ SecurityState {
 // Receive database from server (merge with local)
 {
   "entries": [
-    {"uid": "AAAABBBB", "name": "Alice", "timestamp_reg": 1000000},
-    {"uid": "CCCCDDDD", "name": "Bob", "timestamp_reg": 1000100}
+    { "uid": "AAAABBBB", "name": "Alice", "timestamp_reg": 1000000 },
+    { "uid": "CCCCDDDD", "name": "Bob", "timestamp_reg": 1000100 }
   ],
   "count": 2,
   "last_sync": 1234567890
@@ -337,6 +339,7 @@ SecurityState {
 ## ⚙️ Task Specifications
 
 ### Task 1: Input Task
+
 - **Priority**: HIGH (3)
 - **Period**: 50ms
 - **Stack**: 2KB
@@ -347,6 +350,7 @@ SecurityState {
   3. Queue: `xQueueSend(rfidDataQueue, &rfidData, ...)`
 
 ### Task 2: Auth Task (Core)
+
 - **Priority**: HIGH (3)
 - **Period**: 100ms
 - **Stack**: 3KB
@@ -362,6 +366,7 @@ SecurityState {
   8. Queue: Events & rolling update
 
 ### Task 3: Comm Task
+
 - **Priority**: MEDIUM (2)
 - **Period**: 500ms
 - **Stack**: 3KB
@@ -373,6 +378,7 @@ SecurityState {
   4. Merge: Update local database with remote
 
 ### Task 4: Display Task
+
 - **Priority**: LOW (1)
 - **Period**: 250ms
 - **Stack**: 2KB
@@ -384,6 +390,7 @@ SecurityState {
   4. Print to Serial Monitor
 
 ### Task 5: Security Task
+
 - **Priority**: MEDIUM (2)
 - **Period**: 1000ms
 - **Stack**: 2KB
@@ -394,6 +401,7 @@ SecurityState {
   3. Log lockout status every 5s
 
 ### Task 6: Web Server Task
+
 - **Priority**: MEDIUM (2)
 - **Period**: ~100ms event-driven
 - **Stack**: 4KB
@@ -427,6 +435,7 @@ SecurityState {
 ```
 
 **Persistence Guarantee**:
+
 - Write on: Every successful tap (rolling token update)
 - Write on: New UID registration (web form)
 - Write on: MQTT database merge
@@ -439,6 +448,7 @@ SecurityState {
 ### Admin Panel: `GET /admin`
 
 Serves interactive HTML form with:
+
 - UID input (8 hex chars validation)
 - Name input
 - "Register Card" button
@@ -479,6 +489,7 @@ DELETE /api/uid/{uid}     → Delete UID by ID
 ## 🚀 Getting Started
 
 ### 1. Flash to ESP32
+
 ```bash
 # Open project in VS Code
 cd /path/to/RTOS
@@ -489,25 +500,30 @@ code .
 ```
 
 ### 2. Configure WiFi
+
 Edit `include/config.h`:
+
 ```c
 #define WIFI_SSID "YOUR_SSID"
 #define WIFI_PASSWORD "YOUR_PASSWORD"
 ```
 
 ### 3. Monitor Serial Output
+
 ```bash
 # PlatformIO → Monitor
 # Or: pio device monitor --baud 115200
 ```
 
 ### 4. Register First Card
+
 1. Open: `http://ESP32_IP:8080/admin`
 2. Scan card (get UID from Serial Monitor)
 3. Enter name
 4. Click "Register Card"
 
 ### 5. Test Access
+
 1. Tap registered card → GREEN LED + "ACCESS GRANTED"
 2. Tap invalid card 3x → RED LED pulse + "SYSTEM LOCKED"
 3. Wait 30 seconds → Auto unlock
@@ -517,78 +533,83 @@ Edit `include/config.h`:
 ## 📊 Performance Metrics
 
 ### Memory Usage
+
 - **RAM**: ~45% used (148KB / 328KB)
 - **Flash**: ~63% used (820KB / 1310KB)
 
 ### Task CPU Load (estimated)
-| Task | CPU % | Stack Used |
-|------|-------|------------|
-| Input Task | 2.3% | 1.2KB / 2KB |
-| Auth Task | 1.8% | 2.1KB / 3KB |
-| Comm Task | 0.5% | 1.9KB / 3KB |
-| Display Task | 0.8% | 1.5KB / 2KB |
-| Security Task | 0.3% | 0.8KB / 2KB |
-| Web Server Task | 0.4% | 2.1KB / 4KB |
-| **TOTAL** | **~6%** | — |
+
+| Task            | CPU %   | Stack Used  |
+| --------------- | ------- | ----------- |
+| Input Task      | 2.3%    | 1.2KB / 2KB |
+| Auth Task       | 1.8%    | 2.1KB / 3KB |
+| Comm Task       | 0.5%    | 1.9KB / 3KB |
+| Display Task    | 0.8%    | 1.5KB / 2KB |
+| Security Task   | 0.3%    | 0.8KB / 2KB |
+| Web Server Task | 0.4%    | 2.1KB / 4KB |
+| **TOTAL**       | **~6%** | —           |
 
 ### Response Latencies
-| Operation | Latency |
-|-----------|---------|
-| RFID Tap → LED Feedback | ~150ms |
-| Web Registration → MQTT | ~200ms |
-| Database Sync (SPIFFS) | ~100ms |
-| MQTT Publish | ~50ms |
+
+| Operation               | Latency |
+| ----------------------- | ------- |
+| RFID Tap → LED Feedback | ~150ms  |
+| Web Registration → MQTT | ~200ms  |
+| Database Sync (SPIFFS)  | ~100ms  |
+| MQTT Publish            | ~50ms   |
 
 ---
 
 ## 🐛 Common Issues & Fixes
 
-| Issue | Cause | Fix |
-|-------|-------|-----|
-| **"ERROR: Failed to create FreeRTOS objects"** | Insufficient heap | Reduce stack sizes in config.h |
-| **"WiFi not connecting"** | Wrong SSID/password | Verify WIFI_SSID & WIFI_PASSWORD in config.h |
-| **"MQTT not connecting"** | Network blocked | Use alternative broker or check firewall |
-| **"LCD not showing"** | Wrong I2C address | Scan I2C: `i2cdetect -y 1` |
-| **"RFID not detecting"** | Wiring issue | Verify RFID_INT_PIN & RFID_RST_PIN |
+| Issue                                          | Cause               | Fix                                          |
+| ---------------------------------------------- | ------------------- | -------------------------------------------- |
+| **"ERROR: Failed to create FreeRTOS objects"** | Insufficient heap   | Reduce stack sizes in config.h               |
+| **"WiFi not connecting"**                      | Wrong SSID/password | Verify WIFI_SSID & WIFI_PASSWORD in config.h |
+| **"MQTT not connecting"**                      | Network blocked     | Use alternative broker or check firewall     |
+| **"LCD not showing"**                          | Wrong I2C address   | Scan I2C: `i2cdetect -y 1`                   |
+| **"RFID not detecting"**                       | Wiring issue        | Verify RFID_INT_PIN & RFID_RST_PIN           |
 
 ---
 
 ## 📚 File Reference
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `platformio.ini` | 40 | PlatformIO configuration + dependencies |
-| `include/config.h` | 226 | All GPIO pins, timing, constants |
-| `include/data_structures.h` | 140 | Struct definitions (RFIDData, UIDEntry, etc.) |
-| `include/tasks.h` | 60 | External objects + task declarations |
-| `include/security.h` | 110 | Security functions (rolling token, lockout) |
-| `include/spiffs.h` | 85 | SPIFFS file I/O declarations |
-| `include/comm.h` | 95 | MQTT/WiFi declarations |
-| `include/webServer.h` | 105 | Web server declarations |
-| `src/main.cpp` | 320+ | Setup, ISR, task creation |
-| `src/inputTask.cpp` | 70 | RFID reader task |
-| `src/authTask.cpp` | 250+ | UID verification + rolling token |
-| `src/displayTask.cpp` | 120 | LCD + Serial output |
-| `src/securityTask.cpp` | 100 | Lockout monitoring |
-| `src/commTask.cpp` | 150 | MQTT sync task |
-| `src/webServerTask.cpp` | 120 | HTTP request handler |
-| `src/security.cpp` | 300+ | Rolling token algorithm implementation |
-| `src/spiffs.cpp` | 250+ | SPIFFS file operations |
-| `src/mqttClient.cpp` | 300+ | MQTT client + WiFi implementation |
-| `src/webServer.cpp` | 400+ | HTTP handlers + admin dashboard |
-| **TOTAL** | **~3800** lines | Full production-ready system |
+| File                        | Lines           | Purpose                                       |
+| --------------------------- | --------------- | --------------------------------------------- |
+| `platformio.ini`            | 40              | PlatformIO configuration + dependencies       |
+| `include/config.h`          | 226             | All GPIO pins, timing, constants              |
+| `include/data_structures.h` | 140             | Struct definitions (RFIDData, UIDEntry, etc.) |
+| `include/tasks.h`           | 60              | External objects + task declarations          |
+| `include/security.h`        | 110             | Security functions (rolling token, lockout)   |
+| `include/spiffs.h`          | 85              | SPIFFS file I/O declarations                  |
+| `include/comm.h`            | 95              | MQTT/WiFi declarations                        |
+| `include/webServer.h`       | 105             | Web server declarations                       |
+| `src/main.cpp`              | 320+            | Setup, ISR, task creation                     |
+| `src/inputTask.cpp`         | 70              | RFID reader task                              |
+| `src/authTask.cpp`          | 250+            | UID verification + rolling token              |
+| `src/displayTask.cpp`       | 120             | LCD + Serial output                           |
+| `src/securityTask.cpp`      | 100             | Lockout monitoring                            |
+| `src/commTask.cpp`          | 150             | MQTT sync task                                |
+| `src/webServerTask.cpp`     | 120             | HTTP request handler                          |
+| `src/security.cpp`          | 300+            | Rolling token algorithm implementation        |
+| `src/spiffs.cpp`            | 250+            | SPIFFS file operations                        |
+| `src/mqttClient.cpp`        | 300+            | MQTT client + WiFi implementation             |
+| `src/webServer.cpp`         | 400+            | HTTP handlers + admin dashboard               |
+| **TOTAL**                   | **~3800** lines | Full production-ready system                  |
 
 ---
 
 ## 🎓 Learning Resources
 
 **FreeRTOS Concepts**:
+
 - Task creation & scheduling: `xTaskCreate()`, `vTaskDelay()`
 - Queues: `xQueueCreate()`, `xQueueSend()`, `xQueueReceive()`
 - Semaphores: `xSemaphoreCreateBinary()`, `xSemaphoreTake()`, `xSemaphoreGive()`
 - Mutexes: `xSemaphoreCreateMutex()` for critical sections
 
 **ESP32 Specifics**:
+
 - GPIO interrupts: `attachInterrupt()`
 - I2C communication: `Wire` library (LCD)
 - SPI communication: `MOSI/MISO/CLK` (RFID)
@@ -625,4 +646,3 @@ Edit `include/config.h`:
 ---
 
 **Version**: 1.0 | **Created**: May 30, 2026 | **FreeRTOS**: 11.3.0 LTS
-

@@ -35,6 +35,7 @@ http://ESP32_IP:8080/admin
 ### ✅ Complete Implementation (11 files, ~3000 lines)
 
 **Core System**:
+
 - `main.cpp` - Setup, ISR, task creation (320+ lines)
 - `inputTask.cpp` - RFID reader (70 lines)
 - `authTask.cpp` - UID verification + rolling token (250+ lines)
@@ -44,6 +45,7 @@ http://ESP32_IP:8080/admin
 - `webServerTask.cpp` - HTTP handler (120 lines)
 
 **Libraries**:
+
 - `security.cpp` - Rolling token algorithm (300+ lines)
 - `spiffs.cpp` - File I/O & persistence (250+ lines)
 - `mqttClient.cpp` - MQTT + WiFi client (300+ lines)
@@ -70,30 +72,30 @@ http://ESP32_IP:8080/admin
 
 ## 🎯 Key Features
 
-| Feature | Details |
-|---------|---------|
-| **Rolling Token** | UID berubah setiap tap (anti-spoofing) ✓ |
-| **3-Layer Storage** | RAM + SPIFFS + MQTT cloud ✓ |
-| **Web Dashboard** | http://IP:8080/admin untuk registrasi ✓ |
-| **MQTT Sync** | Real-time cloud backup ✓ |
-| **Security** | 3-attempt lockout, 30s timeout ✓ |
-| **Feedback** | LED (green/red) + buzzer ✓ |
-| **Display** | LCD 16x2 I2C + Serial output ✓ |
-| **Performance** | 6 tasks, ~6% CPU load ✓ |
+| Feature             | Details                                  |
+| ------------------- | ---------------------------------------- |
+| **Rolling Token**   | UID berubah setiap tap (anti-spoofing) ✓ |
+| **3-Layer Storage** | RAM + SPIFFS + MQTT cloud ✓              |
+| **Web Dashboard**   | http://IP:8080/admin untuk registrasi ✓  |
+| **MQTT Sync**       | Real-time cloud backup ✓                 |
+| **Security**        | 3-attempt lockout, 30s timeout ✓         |
+| **Feedback**        | LED (green/red) + buzzer ✓               |
+| **Display**         | LCD 16x2 I2C + Serial output ✓           |
+| **Performance**     | 6 tasks, ~6% CPU load ✓                  |
 
 ---
 
 ## 🔧 GPIO Pin Mapping
 
-| Hardware | Pin | Config |
-|----------|-----|--------|
-| RFID INT | GPIO4 | RFID_INT_PIN |
-| RFID RST | GPIO32 | RFID_RST_PIN |
-| Buzzer | GPIO14 | BUZZER_PIN |
-| Green LED | GPIO26 | GREEN_LED |
-| Red LED | GPIO25 | RED_LED |
-| Relay | GPIO27 | RELAY_PIN |
-| LCD (I2C) | GPIO21(SDA), 22(SCL) | Wire |
+| Hardware  | Pin                  | Config       |
+| --------- | -------------------- | ------------ |
+| RFID INT  | GPIO4                | RFID_INT_PIN |
+| RFID RST  | GPIO32               | RFID_RST_PIN |
+| Buzzer    | GPIO14               | BUZZER_PIN   |
+| Green LED | GPIO26               | GREEN_LED    |
+| Red LED   | GPIO25               | RED_LED      |
+| Relay     | GPIO27               | RELAY_PIN    |
+| LCD (I2C) | GPIO21(SDA), 22(SCL) | Wire         |
 
 Edit semua di `include/config.h` jika hardware berbeda
 
@@ -109,6 +111,7 @@ broker: test.mosquitto.org:1883 (no auth)
 ```
 
 Monitor dengan:
+
 ```bash
 mosquitto_sub -h test.mosquitto.org -t "attendance/rfid/#"
 ```
@@ -123,7 +126,7 @@ User taps card
 [Valid UID] → GREEN LED + Beep + "ACCESS GRANTED"
             → UID berubah (rolling token)
             → MQTT publish update
-            
+
 [Invalid UID] → RED LED + Error Beep + "ACCESS DENIED"
               → Failed attempt +1
 
@@ -136,6 +139,7 @@ User taps card
 ## 💾 Database Format
 
 ### In Memory (UIDDatabase struct)
+
 ```c
 UIDEntry {
     uid: "12345678"      // 8 hex chars
@@ -145,14 +149,16 @@ UIDEntry {
 ```
 
 ### Persistent (SPIFFS /uids.json)
+
 ```json
 [
-  {"uid":"12345678", "name":"John", "timestamp_reg":1000},
-  {"uid":"ABCDEF00", "name":"Jane", "timestamp_reg":2000}
+  { "uid": "12345678", "name": "John", "timestamp_reg": 1000 },
+  { "uid": "ABCDEF00", "name": "Jane", "timestamp_reg": 2000 }
 ]
 ```
 
 ### Cloud (MQTT JSON payload)
+
 ```json
 {
   "old_uid": "12345678",
@@ -167,12 +173,14 @@ UIDEntry {
 ## 🌐 Web API
 
 ### Admin Dashboard
+
 ```
 GET http://ESP32_IP:8080/admin
 → Interactive HTML form + registered cards table
 ```
 
 ### REST API
+
 ```
 GET  /api/database
      → JSON: [{uid, name, timestamp_reg}, ...]
@@ -200,13 +208,13 @@ DELETE /api/uid/AAAABBBB
     [ ] Scan card → see UID in Serial
     [ ] Open /admin → register card
     [ ] Card appears in table
-    
+
 [ ] Access Control
     [ ] Tap registered card → GREEN LED + "ACCESS GRANTED"
     [ ] UID changes (rolling token)
     [ ] Tap invalid card 3x → RED LED pulse + "LOCKED"
     [ ] Wait 30s → Auto unlock
-    
+
 [ ] Cloud & Events
     [ ] MQTT events publishing
     [ ] Subscribe receives messages
@@ -222,13 +230,13 @@ DELETE /api/uid/AAAABBBB
 
 ## 🐛 Common Issues
 
-| Issue | Fix |
-|-------|-----|
-| "ERROR: Failed to create FreeRTOS objects" | Reduce stack sizes in config.h |
-| WiFi not connecting | Check WIFI_SSID & WIFI_PASSWORD |
-| MQTT not connecting | Verify test.mosquitto.org is reachable |
-| LCD not showing | Scan I2C address (default 0x27) |
-| RFID not detecting | Verify GPIO pins in config.h |
+| Issue                                      | Fix                                    |
+| ------------------------------------------ | -------------------------------------- |
+| "ERROR: Failed to create FreeRTOS objects" | Reduce stack sizes in config.h         |
+| WiFi not connecting                        | Check WIFI_SSID & WIFI_PASSWORD        |
+| MQTT not connecting                        | Verify test.mosquitto.org is reachable |
+| LCD not showing                            | Scan I2C address (default 0x27)        |
+| RFID not detecting                         | Verify GPIO pins in config.h           |
 
 Details: See `BUILD_GUIDE.md` → Troubleshooting
 
@@ -237,10 +245,12 @@ Details: See `BUILD_GUIDE.md` → Troubleshooting
 ## 📈 Performance Stats
 
 **Memory**:
+
 - RAM: 45% used (148KB / 328KB)
 - Flash: 63% used (820KB / 1310KB)
 
 **CPU**:
+
 - Input Task: 2.3%
 - Auth Task: 1.8%
 - Comm Task: 0.5%
@@ -248,6 +258,7 @@ Details: See `BUILD_GUIDE.md` → Troubleshooting
 - **Total: ~6%**
 
 **Latency**:
+
 - RFID → LED: ~150ms
 - MQTT Publish: ~50ms
 - DB Save: ~100ms
@@ -257,11 +268,11 @@ Details: See `BUILD_GUIDE.md` → Troubleshooting
 
 ## 🎨 LED & Buzzer Feedback
 
-| Event | LED | Buzzer | LCD |
-|-------|-----|--------|-----|
-| Access Granted | 🟢 50ms | 1 beep 100ms | "ACCESS GRANTED" |
-| Access Denied | 🔴 200ms | 2 beeps | "ACCESS DENIED" |
-| System Locked | 🔴 pulse 3x | 1 long 500ms | "SYSTEM LOCKED" |
+| Event          | LED         | Buzzer       | LCD              |
+| -------------- | ----------- | ------------ | ---------------- |
+| Access Granted | 🟢 50ms     | 1 beep 100ms | "ACCESS GRANTED" |
+| Access Denied  | 🔴 200ms    | 2 beeps      | "ACCESS DENIED"  |
+| System Locked  | 🔴 pulse 3x | 1 long 500ms | "SYSTEM LOCKED"  |
 
 ---
 
@@ -302,28 +313,32 @@ RTOS/
 ## ✨ Implementation Highlights
 
 ### 🔒 Security
+
 ✅ Rolling token anti-spoofing (UID changes after each tap)  
 ✅ Failed attempt lockout (3 strikes → 30s lock)  
 ✅ Mutex protection for database access  
-✅ Event audit trail via MQTT  
+✅ Event audit trail via MQTT
 
 ### ⚡ Performance
+
 ✅ Minimal ISR (semaphore only)  
 ✅ 6 concurrent tasks with proper scheduling  
 ✅ Non-blocking queues for communication  
-✅ ~6% CPU load with headroom  
+✅ ~6% CPU load with headroom
 
 ### 💾 Reliability
+
 ✅ 3-layer persistence (RAM + SPIFFS + Cloud)  
 ✅ Automatic MQTT sync  
 ✅ Persistent storage survives power loss  
-✅ Comprehensive error handling  
+✅ Comprehensive error handling
 
 ### 🌐 Integration
+
 ✅ Web dashboard for UID management  
 ✅ REST API for admin operations  
 ✅ MQTT for cloud backup  
-✅ Real-time event logging  
+✅ Real-time event logging
 
 ---
 
@@ -364,18 +379,21 @@ RTOS/
 ## 📞 Support Resources
 
 **Documentation**:
+
 - README.md - Full system overview
 - BUILD_GUIDE.md - Build & deployment steps
 - COMPLETION_REPORT.md - Implementation status
 - Inline code comments in all .cpp files
 
 **Debug**:
+
 - Enable `#define DEBUG_VERBOSE 1` in config.h
 - Monitor Serial output for events
 - Check MQTT with: `mosquitto_sub -h test.mosquitto.org -t "attendance/rfid/#"`
 - Web dashboard at /admin for UI testing
 
 **Customize**:
+
 - All configuration in include/config.h (no code changes needed for most customizations)
 - GPIO pins remappable
 - Task periods adjustable
@@ -388,7 +406,8 @@ RTOS/
 
 All components implemented, documented, and ready for deployment.
 
-**Next Step**: 
+**Next Step**:
+
 1. Open VS Code with project
 2. Follow BUILD_GUIDE.md for step-by-step deployment
 3. Complete testing checklist
@@ -397,4 +416,3 @@ All components implemented, documented, and ready for deployment.
 ---
 
 **Version**: 1.0 | **Created**: May 30, 2026 | **Status**: ✅ COMPLETE
-

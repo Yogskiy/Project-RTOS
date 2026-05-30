@@ -51,51 +51,62 @@ RTOS/
 ## 📖 DOCUMENTATION GUIDE
 
 ### 👶 **For First-Time Users**
+
 **START HERE**: `README.md`
+
 - Complete system overview
 - Architecture diagrams
 - Core concepts explained
 - Performance specifications
 
 **THEN**: `BUILD_GUIDE.md`
+
 - Step-by-step build instructions
 - Hardware setup guide
 - Configuration steps
 - Testing checklist
 
 **FINALLY**: `QUICK_REFERENCE.md`
+
 - Quick 5-minute start
 - GPIO pin reference
 - API quick lookup
 - Common issues
 
 ### 🔧 **For Developers**
+
 **Configuration**: `include/config.h`
+
 - All GPIO pins (line 11-16)
 - Task periods (line 23-27)
 - MQTT settings (line 30-33)
 - Security settings (line 36-38)
 
 **API Reference**: All `include/*.h` files
+
 - Complete function signatures
 - Struct definitions
 - Data types and enums
 - External object declarations
 
 **Implementation Details**: `src/*.cpp` files
+
 - Full algorithm implementations
 - Task logic and workflows
 - Error handling
 - Integration points
 
 ### 🚀 **For Deployment**
+
 **Quick Check**: `DEPLOYMENT_READY.md`
+
 - Final status summary
 - Deployment checklist
 - Success criteria (all met)
 - Next steps
 
 **Troubleshooting**: `BUILD_GUIDE.md` → Troubleshooting
+
 - Common issues and fixes
 - Debug procedures
 - Performance tuning
@@ -107,6 +118,7 @@ RTOS/
 ### ⚙️ CONFIGURATION & BUILD
 
 **platformio.ini** (40 lines)
+
 ```
 Purpose: PlatformIO project configuration
 Content:
@@ -122,6 +134,7 @@ Usage: Automatically used by PlatformIO, minimal changes needed
 ### 📋 HEADER FILES (API LAYER)
 
 **config.h** (226 lines) ⭐ **MOST EDITED**
+
 ```
 Purpose: Central configuration for entire system
 Content:
@@ -141,6 +154,7 @@ Key Lines:
 ```
 
 **data_structures.h** (140 lines)
+
 ```
 Purpose: Define all struct types used in system
 Content:
@@ -156,6 +170,7 @@ Usage: Included by all source files
 ```
 
 **tasks.h** (60 lines)
+
 ```
 Purpose: Task function declarations and global object references
 Content:
@@ -171,6 +186,7 @@ Key Functions:
 ```
 
 **security.h** (110 lines)
+
 ```
 Purpose: Security functions API
 Content:
@@ -186,6 +202,7 @@ Usage: Called by authTask and securityTask
 ```
 
 **spiffs.h** (85 lines)
+
 ```
 Purpose: File I/O and persistence API
 Content:
@@ -199,6 +216,7 @@ Usage: Called by authTask and webServerTask
 ```
 
 **comm.h** (95 lines)
+
 ```
 Purpose: MQTT and WiFi API
 Content:
@@ -214,6 +232,7 @@ Usage: Called by commTask and webServerTask
 ```
 
 **webServer.h** (105 lines)
+
 ```
 Purpose: Web server and HTTP API
 Content:
@@ -228,6 +247,7 @@ Usage: Called by main.cpp and webServerTask
 ### 📝 IMPLEMENTATION FILES
 
 **main.cpp** (320+ lines) ⭐ **ENTRY POINT**
+
 ```
 Purpose: System initialization and task creation
 Content:
@@ -254,6 +274,7 @@ Key Variables:
 ```
 
 **inputTask.cpp** (70 lines)
+
 ```
 Purpose: RFID card detection and reading
 Content:
@@ -270,6 +291,7 @@ Latency: ~50ms (fixed period)
 ```
 
 **authTask.cpp** (250+ lines) ⭐ **CORE LOGIC**
+
 ```
 Purpose: UID verification and rolling token calculation
 Content:
@@ -300,6 +322,7 @@ Performance: ~1.8% CPU load
 ```
 
 **displayTask.cpp** (120 lines)
+
 ```
 Purpose: LCD and Serial Monitor output
 Content:
@@ -324,6 +347,7 @@ Performance: ~0.8% CPU load
 ```
 
 **securityTask.cpp** (100 lines)
+
 ```
 Purpose: Monitor failed attempts and lockout duration
 Content:
@@ -349,6 +373,7 @@ Performance: ~0.3% CPU load
 ```
 
 **commTask.cpp** (150 lines)
+
 ```
 Purpose: MQTT cloud synchronization
 Content:
@@ -374,6 +399,7 @@ Performance: ~0.5% CPU load
 ```
 
 **webServerTask.cpp** (120 lines)
+
 ```
 Purpose: HTTP request processing for UID management
 Content:
@@ -399,6 +425,7 @@ Performance: ~0.4% CPU load
 ```
 
 **security.cpp** (300+ lines) ⭐ **ALGORITHM**
+
 ```
 Purpose: Core security algorithms and hardware control
 Content:
@@ -407,37 +434,37 @@ Content:
     - Increment by 1 (mod 0xFFF)
     - Recombine with prefix
     - Result is new UID for next tap
-  
+
   ▪ verifyUID() - Search database
     - Convert UID binary to hex string
     - Linear search through database
     - Return index or -1 (not found)
-  
+
   ▪ recordFailedAttempt() - Track failed attempts
     - Increment counter
     - If >= 3: trigger lockout
-  
+
   ▪ Hardware feedback functions
     - feedbackSuccess(): GREEN LED 50ms + beep 100ms
     - feedbackFailure(): RED LED 200ms + 2 beeps
     - feedbackLockout(): RED LED 3x pulse + long beep 500ms
-  
+
   ▪ UID conversion functions
     - uidBinaryToHex(): [0x12,0x34] → "12345678"
     - uidHexToBinary(): "12345678" → [0x12,0x34]
 
 Rolling Token Algorithm Detail:
   old_uid = [0x12, 0x34, 0x56, 0x78]
-  
+
   // Extract last 3 hex digits
   suffix = ((0x78 << 4) | (0x56 & 0x0F)) = 0x678
-  
+
   // Increment (mod 0xFFF)
   new_suffix = (0x678 + 1) & 0xFFF = 0x679
-  
+
   // Recombine
   new_uid = [0x12, 0x34, 0x56, 0x79]
-  
+
   // Database now only recognizes [0x12,0x34,0x56,0x79]
   // Old UID is rejected (anti-spoofing)
 
@@ -449,29 +476,30 @@ Key Security Properties:
 ```
 
 **spiffs.cpp** (250+ lines)
+
 ```
 Purpose: Persistent storage via SPIFFS and JSON
 Content:
   ▪ loadUIDsFromFile() - Read /spiffs/uids.json
     - Use ArduinoJson to parse JSON
     - Populate UIDDatabase struct
-  
+
   ▪ saveUIDsToFile() - Write database to JSON
     - Use ArduinoJson to serialize
     - Write to SPIFFS
-  
+
   ▪ addUIDToFile() - Register new card
     - Load existing database
     - Check for duplicates
     - Append new entry
     - Save back to SPIFFS
-  
+
   ▪ deleteUIDFromFile() - Remove card
     - Load database
     - Find entry by UID
     - Shift remaining entries
     - Save back
-  
+
   ▪ File utilities
     - fileExists(), deleteFile()
     - getFileSize(), listSPIFFSFiles()
@@ -496,6 +524,7 @@ Persistence Guarantees:
 ```
 
 **mqttClient.cpp** (300+ lines)
+
 ```
 Purpose: MQTT and WiFi connectivity
 Content:
@@ -504,23 +533,23 @@ Content:
     - isWiFiConnected() - Check status
     - getWiFiSignalStrength() - RSSI
     - getESP32IPAddress() - Local IP
-  
+
   ▪ MQTT Connection
     - initMQTT() - Setup PubSubClient
     - isMQTTConnected() - Check connection
     - reconnectMQTT() - Reconnect with backoff
     - getMQTTClient() - Get client pointer
-  
+
   ▪ Publish Functions
     - publishRollingTokenUpdate() - Send UID update
     - publishEventLog() - Send event
     - publishUIDRegistration() - Send new card
     - publishDatabaseSyncRequest() - Request sync
-  
+
   ▪ Subscribe/Callback
     - onMQTTMessage() - Handle incoming messages
     - subscribeMQTTTopics() - Subscribe to topics
-  
+
   ▪ Database Sync
     - parseDatabaseFromJSON() - Parse MQTT payload
     - databaseToJSON() - Serialize for transmission
@@ -529,10 +558,10 @@ Content:
 MQTT Topics:
   publish: attendance/rfid/uid_update
     {"old_uid":"12345678", "new_uid":"12345679", ...}
-  
+
   publish: attendance/rfid/event_log
     {"type":0, "uid":"12345678", "user_name":"John", ...}
-  
+
   subscribe: attendance/rfid/database_pull
     (Receive database from server)
 
@@ -542,6 +571,7 @@ Broker:
 ```
 
 **webServer.cpp** (400+ lines)
+
 ```
 Purpose: HTTP server and web interface
 Content:
@@ -549,19 +579,19 @@ Content:
     - initWebServer() - Define routes
     - startWebServer() - Launch async server
     - stopWebServer() - Shutdown
-  
+
   ▪ HTTP Routes
     - GET /admin → Dashboard HTML
     - GET /api/database → JSON of all UIDs
     - POST /api/register → Register new UID
     - DELETE /api/uid/{uid} → Delete UID
-  
+
   ▪ Dashboard HTML
     - Generate interactive form
     - Display current database
     - JavaScript for AJAX calls
     - Auto-refresh every 5 seconds
-  
+
   ▪ Validation Functions
     - validateUIDFormat() - Check 8 hex chars
     - validateNameFormat() - Check name length
@@ -579,11 +609,11 @@ API Responses:
     Input: {"uid":"AAAABBBB", "name":"Alice"}
     Success: {"status":"success", "message":"UID registered"}
     Error: {"error":"UID already exists"}
-  
+
   DELETE /api/uid/AAAABBBB
     Success: {"status":"success", "message":"UID deleted"}
     Error: {"error":"UID not found"}
-  
+
   GET /api/database
     [
       {"uid":"AAAABBBB", "name":"Alice", "timestamp_reg":1000},
@@ -646,26 +676,31 @@ platformio.ini
 ## 🎯 WHERE TO START?
 
 ### **For Understanding the System**
+
 1. Read `README.md` (architecture, data flow)
 2. Skim `include/config.h` (configuration constants)
 3. Read `include/data_structures.h` (main data types)
 
 ### **For Building**
+
 1. Check `include/config.h` (WiFi credentials)
 2. Run PlatformIO Build (compile)
 3. Follow `BUILD_GUIDE.md` (deployment)
 
 ### **For Debugging**
+
 1. Check `src/main.cpp` (initialization)
 2. Look at relevant task `.cpp` file
 3. Check `BUILD_GUIDE.md` → Troubleshooting
 
 ### **For Customizing**
+
 1. Edit `include/config.h` (all settings)
 2. Recompile and test
 3. No other changes needed for standard deployment
 
 ### **For API Reference**
+
 1. Look up function in `include/*.h` file
 2. Check implementation in corresponding `src/*.cpp`
 3. Read inline comments for details
@@ -674,15 +709,14 @@ platformio.ini
 
 ## 📈 METRICS SUMMARY
 
-| Category | Count | Lines |
-|----------|-------|-------|
-| Header Files | 8 | 821 |
-| Implementation Files | 11 | 3000+ |
-| Configuration Files | 1 | 40 |
-| Documentation Files | 6 | 2200+ |
-| **TOTAL** | **26** | **~6000** |
+| Category             | Count  | Lines     |
+| -------------------- | ------ | --------- |
+| Header Files         | 8      | 821       |
+| Implementation Files | 11     | 3000+     |
+| Configuration Files  | 1      | 40        |
+| Documentation Files  | 6      | 2200+     |
+| **TOTAL**            | **26** | **~6000** |
 
 ---
 
 **Happy Hacking!** 🚀
-
