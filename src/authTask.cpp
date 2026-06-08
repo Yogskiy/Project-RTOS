@@ -1,7 +1,7 @@
 #include "tasks.h"
 #include "config.h"
 #include "security.h"
-#include "spiffs.h"
+#include "spiffs_manager.h"
 #include <Arduino.h>
 
 void vAuthTask(void *pvParameters) {

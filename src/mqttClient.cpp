@@ -1,7 +1,7 @@
 #include "comm.h"
 #include "config.h"
 #include "tasks.h"
-#include "spiffs.h"
+#include "spiffs_manager.h"
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>

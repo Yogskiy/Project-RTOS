@@ -1,6 +1,6 @@
 #include "tasks.h"
 #include "config.h"
-#include "spiffs.h"
+#include "spiffs_manager.h"
 #include "comm.h"
 #include "security.h"
 #include <Arduino.h>

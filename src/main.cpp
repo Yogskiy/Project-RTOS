@@ -11,8 +11,8 @@
 #include "data_structures.h"
 #include "tasks.h"
 #include "security.h"
+#include "spiffs_manager.h"
 #include "comm.h"
-#include "spiffs.h"
 #include "webServer.h"
 
 // ============ GLOBAL OBJECTS ============
