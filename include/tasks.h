@@ -1,90 +1,77 @@
 #ifndef TASKS_H
 #define TASKS_H
 
+#include <Arduino.h>
+
+extern "C" {
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "freertos/semphr.h"
+}
+
 #include "data_structures.h"
 
-// ============ EXTERNAL OBJECTS (defined in main.cpp) ============
-extern QueueHandle_t rfidDataQueue;
-extern QueueHandle_t rollingTokenQueue;
-extern QueueHandle_t eventLogQueue;
-extern QueueHandle_t httpRequestQueue;
+// ============ GLOBAL SYNCHRONIZATION OBJECTS (defined in main.cpp) ============
 
-extern SemaphoreHandle_t rfidReadSemaphore;
+// Queues
+extern QueueHandle_t rfidDataQueue;   // inputTask  → authTask
+extern QueueHandle_t eventLogQueue;   // authTask   → displayTask
+
+// Semaphores
+extern SemaphoreHandle_t rfidReadSemaphore;     // ISR → inputTask
 extern SemaphoreHandle_t wifiConnectedSemaphore;
 
-extern MutexHandle_t databaseMutex;
-extern MutexHandle_t serialMutex;
+// Mutexes
+extern SemaphoreHandle_t serialMutex;   // Protect Serial output
 
-extern UIDDatabase uidDatabase;
+// Shared state
 extern SecurityState securityState;
 
-// ============ TASK FUNCTION DECLARATIONS ============
+// ============ TASK DECLARATIONS ============
 
 /**
- * @brief Input Task - Listen to RFID reader and queue detected UIDs
- * Priority: HIGH (3)
- * Period: 50ms
+ * @brief Input Task — waits for RFID ISR semaphore, reads UID, queues to authTask.
+ * Priority: HIGH (3)   Period: 50 ms
  */
 void vInputTask(void *pvParameters);
 
 /**
- * @brief Authentication Task - Verify UID and calculate rolling token
- * Priority: HIGH (3)
- * Period: 100ms
+ * @brief Auth Task — dequeues RFID UID, verifies with XAMPP server via HTTP,
+ *        calculates rolling token, updates server, logs event.
+ * Priority: HIGH (3)   Period: 100 ms (blocks on queue)
  */
 void vAuthTask(void *pvParameters);
 
 /**
- * @brief Web Server Task - Handle HTTP registration and management
- * Priority: MEDIUM (2)
- * Period: ~100ms event-driven
- */
-void vWebServerTask(void *pvParameters);
-
-/**
- * @brief Communication Task - Sync with MQTT broker
- * Priority: MEDIUM (2)
- * Period: 500ms
+ * @brief Comm Task — periodic WiFi health check and server heartbeat.
+ * Priority: MEDIUM (2)   Period: 5000 ms
  */
 void vCommTask(void *pvParameters);
 
 /**
- * @brief Security Task - Monitor failed attempts and lockout
- * Priority: MEDIUM (2)
- * Period: 1000ms
+ * @brief Security Task — monitors failed attempts, manages lockout timer.
+ * Priority: MEDIUM (2)   Period: 1000 ms
  */
 void vSecurityTask(void *pvParameters);
 
 /**
- * @brief Display Task - Update LCD and Serial output
- * Priority: LOW (1)
- * Period: 250ms
+ * @brief Display Task — reads eventLogQueue, updates 16x2 LCD.
+ * Priority: LOW (1)   Period: 250 ms
  */
 void vDisplayTask(void *pvParameters);
 
-// ============ ISR CALLBACK ============
+// ============ ISR ============
 
 /**
- * @brief ISR for RFID reader interrupt
- * Minimal code - only give semaphore
+ * @brief Minimal RFID interrupt — only gives rfidReadSemaphore.
  */
 void rfidISR();
 
-// ============ UTILITY FUNCTIONS ============
+// ============ SETUP HELPERS ============
 
-/**
- * @brief Initialize all synchronization objects (semaphore, queue, mutex)
- */
 void initializeSynchronization();
-
-/**
- * @brief Create all 6 FreeRTOS tasks
- */
 void createAllTasks();
-
-/**
- * @brief Print task statistics for debugging
- */
 void printTaskStats();
 
 #endif // TASKS_H
